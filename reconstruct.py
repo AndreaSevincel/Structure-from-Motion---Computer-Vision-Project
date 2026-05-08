@@ -79,9 +79,9 @@ def triangulate(pts1: np.ndarray, pts2: np.ndarray,
 
 def project_points(points_3d: np.ndarray, rvec: np.ndarray,
                    tvec: np.ndarray, K: np.ndarray) -> np.ndarray:
-    pts2d, _ = cv2.projectPoints(points_3d, rvec, tvec, K, None)
-    return pts2d.reshape(-1, 2)
-
+    pts2d, _ = cv2.projectPoints(points_3d, rvec, tvec, K, None) #rotates and translates the 3D points into the camera's local coordinate system
+    return pts2d.reshape(-1, 2) #It then flattens those 3D coordinates onto a 2D plane based on the geometry defined in the k matrix
+#flattened into clean nx2 array
 
 def reprojection_residuals(params: np.ndarray, n_points: int,
                            pts1: np.ndarray, pts2: np.ndarray,
@@ -90,10 +90,10 @@ def reprojection_residuals(params: np.ndarray, n_points: int,
     tvec  = params[3:6]
     pts3d = params[6:].reshape((n_points, 3))
 
-    proj1 = project_points(pts3d, np.zeros(3), np.zeros(3), K)
-    proj2 = project_points(pts3d, rvec, tvec, K)
+    proj1 = project_points(pts3d, np.zeros(3), np.zeros(3), K) #where the 3D points should appear in the first image
+    proj2 = project_points(pts3d, rvec, tvec, K) #where 3D points should appear in the second image according to your current model
 
-    return np.hstack(((proj1 - pts1).ravel(), (proj2 - pts2).ravel()))
+    return np.hstack(((proj1 - pts1).ravel(), (proj2 - pts2).ravel())) #stacking of the reprojection residuals
 
 
 def bundle_adjust(pts1: np.ndarray, pts2: np.ndarray,
@@ -101,25 +101,20 @@ def bundle_adjust(pts1: np.ndarray, pts2: np.ndarray,
                   t: np.ndarray, K: np.ndarray) -> np.ndarray:
     """Non-linear refinement via Levenberg-Marquardt bundle adjustment."""
     log.info("Running Levenberg-Marquardt bundle adjustment ...")
-    rvec, _ = cv2.Rodrigues(R)
-    initial_params = np.hstack((rvec.ravel(), t.ravel(), points_3d.ravel()))
+    rvec, _ = cv2.Rodrigues(R) #rodrigues rotation, reduces the number of parameters from 9 to 3
+    initial_params = np.hstack((rvec.ravel(), t.ravel(), points_3d.ravel())) #initial guess, contains the rotation vector, the translation vector, and the coordinates for every 3D point in the cloud
     n_points = points_3d.shape[0]
 
-    res = least_squares(
+    res = least_squares( #least squares used as numerical solver
         reprojection_residuals,
         initial_params,
-        method="lm",
+        method="lm", #the optimizer i use is the levenberg marquardt. 
         args=(n_points, pts1, pts2, K),
     )
     log.info("  Optimization %s | final cost: %.4f",
              "converged" if res.success else "did not converge", res.cost)
 
     return res.x[6:].reshape((n_points, 3))
-
-
-# ---------------------------------------------------------------------------
-# Outlier filtering
-# ---------------------------------------------------------------------------
 
 def filter_outliers(points_3d: np.ndarray, z_thresh: float = 2.0) -> np.ndarray:
     """Remove points further than z_thresh standard deviations from the centroid."""
@@ -134,10 +129,6 @@ def filter_outliers(points_3d: np.ndarray, z_thresh: float = 2.0) -> np.ndarray:
         return points_3d
     return points_3d[mask]
 
-
-# ---------------------------------------------------------------------------
-# Visualisation
-# ---------------------------------------------------------------------------
 
 def visualize(points_3d: np.ndarray, title: str = "Sparse 3D Point Cloud",
               save_path: str = None):
