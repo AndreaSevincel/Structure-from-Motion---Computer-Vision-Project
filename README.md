@@ -14,11 +14,23 @@ computer-vision-projects/
 ├── activity-a_harris-corner-detector/
 │   ├── detector.py               # Harris Corner Detector (from scratch)
 │   ├── detected_corners.png      # Sample output
-│   └── README.md
+│   ├── README.md
+│   └── images
 │
 └── activity-b_3d-reconstruction/
     ├── reconstruct.py            # Two-view SfM pipeline
     ├── requirements.txt          # Python dependencies
+    ├── images
+    ├── cloud_000_002.np
+    ├── cloud_000_004.npy
+    ├── cloud_000_006.npy
+    ├── cloud_000_008.npy
+    ├── cloud.png
+    ├── computer_vision_project.pdf
+    ├── test.py
+    ├── merged_cloud.py
+    ├── dino_Ps.mat
+    ├── dino_cloud.npy
     └── README.md
 ```
 
