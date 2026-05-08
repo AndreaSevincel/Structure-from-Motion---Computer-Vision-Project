@@ -16,6 +16,7 @@ This project implements the **Harris Corner Detector** from scratch using Python
 computer-vision-project/
 ├── detector.py               # Main Harris Corner Detector implementation
 ├── detected_corners.png      # Output image with detected corners visualized
+├── images  
 └── README.md
 ```
 
