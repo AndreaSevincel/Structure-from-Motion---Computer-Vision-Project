@@ -25,7 +25,10 @@ computer-vision-project/
 
 The Harris Corner Detector identifies distinctive keypoints in an image by analyzing local intensity changes using the **structure tensor** M:
 
-$$M = \sum_{x,y} w(x,y) \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y & I_y^2 \end{bmatrix}$$
+```
+M = Σ w(x,y) * [ Ix²    IxIy ]
+                [ IxIy   Iy²  ]
+```
 
 The **Harris response** R is computed as:
 
@@ -37,12 +40,14 @@ where `k = 0.04` (empirical constant), `det(M) = λ₁λ₂`, and `trace(M) = λ
 
 ### Implementation Steps
 
-1. **Gaussian smoothing** — Pre-blur the image to reduce noise.
-2. **Sobel gradients** — Compute `Ix` and `Iy` using Sobel operators (custom convolution engine included).
-3. **Structure tensor** — Build the M matrix using box filtering over a 3×3 window.
+1. **Gaussian smoothing** — Pre-blur the image using a custom Gaussian kernel to reduce noise.
+2. **Sobel gradients** — Compute `Ix` and `Iy` using a custom 2D convolution engine with Sobel operators.
+3. **Structure tensor** — Build the M matrix using a custom box filter over the configured window.
 4. **Response map R** — Compute the Harris response at each pixel.
-5. **Thresholding** — Keep only responses above 10% of the maximum R value.
+5. **Thresholding** — Keep only responses above `threshold × max(R)`.
 6. **Non-Maximal Suppression (NMS)** — Manually iterate over the response map to retain only local maxima, isolating exact corner coordinates.
+
+> All filtering steps (Gaussian blur, Sobel, box filter) are implemented from scratch using `apply_convolution` — no `cv2` filtering functions are used inside the pipeline.
 
 ---
 
@@ -63,30 +68,46 @@ pip install numpy opencv-python matplotlib
 
 ## Usage
 
-Run the detector from the command line:
+Run the detector as a command-line script:
 
 ```bash
-python detector.py
+python detector.py --image <path_to_image> [options]
 ```
 
-By default, the script reads the image from the hardcoded path at the top of `detector.py`. To use a different image, edit the `img_path` variable:
+### Arguments
 
-```python
-img_path = "/path/to/your/image.ppm"
+| Argument      | Required | Default                | Description                                        |
+|---------------|----------|------------------------|----------------------------------------------------|
+| `--image`     | Yes      | —                      | Path to the input image (e.g. images/viff.000.ppm) |
+| `--k`         | No       | 0.04                   | Harris sensitivity constant                        |
+| `--threshold` | No       | 0.1                    | NMS threshold as a fraction of max R               |
+| `--window`    | No       | 3                      | Window size for structure tensor and NMS           |
+| `--output`    | No       | detected_corners.png   | Path for the output image                          |
+
+### Examples
+
+Basic usage:
+```bash
+python detector.py --image images/viff.000.ppm
 ```
 
-The output is saved as `detected_corners.png` in the current working directory — a copy of the input image with detected corners marked in green.
+Custom sensitivity and output path:
+```bash
+python detector.py --image images/viff.000.ppm --k 0.06 --output results/corners.png
+```
+
+Stricter threshold with a larger window:
+```bash
+python detector.py --image images/viff.000.ppm --threshold 0.05 --window 5
+```
 
 ---
 
 ## Output
 
-Detected corners are drawn as green filled circles (radius 3px) over a grayscale version of the input image and saved to `detected_corners.png`.
+The script prints the number of detected corners and saves the result image to the path specified by `--output`. Corners are drawn as green filled circles (radius 3px) over the grayscale input image.
 
----
-
-## Notes
-
-- The custom `apply_convolution` and `create_gaussian_kernel` functions are included for reference and to satisfy the requirement of avoiding high-level filtering calls in the foundational implementation.
-- The `harris_corner_detector` function uses OpenCV utilities (`GaussianBlur`, `Sobel`, `boxFilter`) for efficiency in the final version, while the manual convolution engine remains available.
-- No external packages beyond those listed above are required.
+```
+Corners detected: 142
+Output saved to: detected_corners.png
+```
