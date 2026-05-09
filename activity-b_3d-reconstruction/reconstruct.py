@@ -116,19 +116,6 @@ def bundle_adjust(pts1: np.ndarray, pts2: np.ndarray,
 
     return res.x[6:].reshape((n_points, 3))
 
-def filter_outliers(points_3d: np.ndarray, z_thresh: float = 2.0) -> np.ndarray:
-    """Remove points further than z_thresh standard deviations from the centroid."""
-    mean = np.mean(points_3d, axis=0)
-    std  = np.std(points_3d, axis=0)
-    std[std < 1e-6] = 1e-6  # avoid zero-division on degenerate axes
-    mask = np.all(np.abs(points_3d - mean) < z_thresh * std, axis=1)
-    log.info("Outlier filter: %d -> %d points (removed %d)",
-             len(points_3d), mask.sum(), (~mask).sum())
-    if mask.sum() == 0:
-        log.warning("All points removed -- try increasing --outlier-thresh")
-        return points_3d
-    return points_3d[mask]
-
 
 def visualize(points_3d: np.ndarray, title: str = "Sparse 3D Point Cloud",
               save_path: str = None):
