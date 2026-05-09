@@ -148,9 +148,6 @@ def visualize(points_3d: np.ndarray, title: str = "Sparse 3D Point Cloud",
         plt.show()
 
 
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
