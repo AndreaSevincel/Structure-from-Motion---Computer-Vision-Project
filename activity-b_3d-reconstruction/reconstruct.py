@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 
 def extract_and_match(img1: np.ndarray, img2: np.ndarray): #images as n-dimensional arrays
-    detector = cv2.AgastFeatureDetector_create(threshold=5) #sorry, imported the agast feature detector... freak as well
+    detector = cv2.AgastFeatureDetector_create(threshold=5) #imported the agast feature detector... freak as well
     descriptor = cv2.xfeatures2d.FREAK_create() 
 
     kp1 = detector.detect(img1, None) #detecting points of interest
@@ -43,7 +43,7 @@ def extract_and_match(img1: np.ndarray, img2: np.ndarray): #images as n-dimensio
     pts1 = np.float32([kp1[m.queryIdx].pt for m in matches]) #m containts indices, queryIdx is the point's row in Img 1
     pts2 = np.float32([kp2[m.trainIdx].pt for m in matches]) #trainIdx points row in Img 2
     return pts1, pts2 
-    #this section just loops through the matches, looks up the (x, y) 
+    #loop through the matches, looks up the (x, y) 
     # coordinate for each index in the original keypoint lists (kp1, kp2), and stores them as np array
 
 
@@ -86,9 +86,10 @@ def project_points(points_3d: np.ndarray, rvec: np.ndarray,
 def reprojection_residuals(params: np.ndarray, n_points: int,
                            pts1: np.ndarray, pts2: np.ndarray,
                            K: np.ndarray) -> np.ndarray:
-    rvec  = params[:3]
-    tvec  = params[3:6]
-    pts3d = params[6:].reshape((n_points, 3))
+    rvec  = params[:3] #the first 3 $,$,$,_,_,_
+    tvec  = params[3:6] # _,_,_,$,$,$
+    pts3d = params[6:].reshape((n_points, 3)) #3 x n_points, clever trick: could have used pts3d = params[6:].reshape((-1, 3)) if we did not know n_points, telling Numpy to figure out 
+    #the number of rows we need
 
     proj1 = project_points(pts3d, np.zeros(3), np.zeros(3), K) #where the 3D points should appear in the first image
     proj2 = project_points(pts3d, rvec, tvec, K) #where 3D points should appear in the second image according to your current model
@@ -114,7 +115,7 @@ def bundle_adjust(pts1: np.ndarray, pts2: np.ndarray,
     log.info("  Optimization %s | final cost: %.4f",
              "converged" if res.success else "did not converge", res.cost)
 
-    return res.x[6:].reshape((n_points, 3))
+    return res.x[6:].reshape((n_points, 3)) #2D array containing the refined 3D coordinates of my points, [6:] since pts3d the same.
 
 
 def visualize(points_3d: np.ndarray, title: str = "Sparse 3D Point Cloud",
@@ -136,7 +137,7 @@ def visualize(points_3d: np.ndarray, title: str = "Sparse 3D Point Cloud",
 
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser() -> argparse.ArgumentParser: #command-line interface, and generates a --help menu
     p = argparse.ArgumentParser(
         description="Two-view sparse 3D reconstruction (AGAST + FREAK + LM BA)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -170,11 +171,12 @@ def main():
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    # Build intrinsic matrix
+    # the camera parameters, put them on a camera calibration matrix.
     fx, fy, cx, cy = args.K
     K = np.array([[fx, 0, cx],
                   [0, fy, cy],
                   [0,  0,  1]], dtype=np.float64)
+    #This matrix maps 3D coordinates in the camera's view to 2D pixel coordinates on the image sensor.
     log.info("Intrinsic matrix K:\n%s", K)
 
     # Load images
@@ -186,11 +188,13 @@ def main():
         sys.exit(1)
     log.info("  img1: %s  |  img2: %s", img1.shape, img2.shape)
 
-    pts1, pts2= extract_and_match(img1, img2)
-    R, t, pts1_in, pts2_in = estimate_pose(pts1, pts2, K, args.ransac_thresh)
-    points_3d= triangulate(pts1_in, pts2_in, R, t, K)
+    pts1, pts2= extract_and_match(img1, img2) #finding distinct keypoints (like corners or distinct textures) in both images and pairing them up
+    R, t, pts1_in, pts2_in = estimate_pose(pts1, pts2, K, args.ransac_thresh) #how the camera moved between the two shots
+    #RANSAC to filter out the bad matches (outliers), returning only the valid, verified matching points (pts1_in, pts2_in).
+    points_3d= triangulate(pts1_in, pts2_in, R, t, K) #projecting lines out from the camera positions through the 2D matching pixels.
+    # The intersection of these lines in 3D space determines the (X, Y, Z) coordinates of each point.
 
-    # filter outliers before BA to prevent them corrupting the optimization
+    #RANSAC cleans up mistakes in the 2D image matching, while this cleans up geometry mistakes in the 3D space.
     if args.outlier_thresh > 0:
         mean = np.mean(points_3d, axis=0)
         std  = np.std(points_3d, axis=0)
@@ -201,7 +205,7 @@ def main():
         pts2_in   = pts2_in[mask]
         log.info("Pre-BA filter: %d -> %d points", mask.size, mask.sum())
 
-    optimised_3d= bundle_adjust(pts1_in, pts2_in, points_3d, R, t, K)
+    optimised_3d= bundle_adjust(pts1_in, pts2_in, points_3d, R, t, K) #Levenberg-Marquardt solver
     log.info("Reconstruction complete -- %d 3-D points.", len(optimised_3d))
 
     # Save point cloud
