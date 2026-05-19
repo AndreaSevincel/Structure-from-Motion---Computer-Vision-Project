@@ -6,19 +6,10 @@
 
 ## Overview
 
-This project implements the **Harris Corner Detector** from scratch using Python and NumPy, as part of the Computer Vision final exam. The goal is to demonstrate a rigorous understanding of continuous mathematics translated into discrete array operations, without relying on high-level filtering abstractions.
+This project implements the **Harris Corner Detector** from scratch using Python and NumPy, as part of the Computer Vision final exam.
 
 ---
 
-## Project Structure
-
-```
-computer-vision-project/
-├── detector.py               # Main Harris Corner Detector implementation
-├── detected_corners.png      # Output image with detected corners visualized
-├── images  
-└── README.md
-```
 
 ---
 
@@ -41,12 +32,12 @@ where `k = 0.04` (empirical constant), `det(M) = λ₁λ₂`, and `trace(M) = λ
 
 ### Implementation Steps
 
-1. **Gaussian smoothing** — Pre-blur the image using a custom Gaussian kernel to reduce noise.
-2. **Sobel gradients** — Compute `Ix` and `Iy` using a custom 2D convolution engine with Sobel operators.
-3. **Structure tensor** — Build the M matrix using a custom box filter over the configured window.
+1. **Gaussian smoothing** — blur the image using a Gaussian kernel to reduce noise.
+2. **Sobel gradients** — compute `Ix` and `Iy` using a custom 2D convolution engine with Sobel operators.
+3. **Structure tensor** — build the M matrix using a custom box filter over the configured window.
 4. **Response map R** — Compute the Harris response at each pixel.
 5. **Thresholding** — Keep only responses above `threshold × max(R)`.
-6. **Non-Maximal Suppression (NMS)** — Manually iterate over the response map to retain only local maxima, isolating exact corner coordinates.
+6. **Non-Maximal Suppression (NMS)** — iterate over the response map to retain only local maxima, isolating exact corner coordinates.
 
 > All filtering steps (Gaussian blur, Sobel, box filter) are implemented from scratch using `apply_convolution` — no `cv2` filtering functions are used inside the pipeline.
 

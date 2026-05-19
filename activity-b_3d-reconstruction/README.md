@@ -10,27 +10,6 @@ This project implements a complete **two-view Structure from Motion (SfM)** pipe
 
 ---
 
-## Project Structure
-
-```
-activity-b_3d-reconstruction/
-    ├── reconstruct.py            # Two-view SfM pipeline
-    ├── requirements.txt          # Python dependencies
-    ├── images
-    ├── cloud_000_002.np
-    ├── cloud_000_004.npy
-    ├── cloud_000_006.npy
-    ├── cloud_000_008.npy
-    ├── cloud.png
-    ├── computer_vision_project.pdf
-    ├── test.py
-    ├── merged_cloud.py
-    ├── dino_Ps.mat
-    ├── dino_cloud.npy
-    └── README.md
-
----
-
 ## Algorithm: Two-View SfM Pipeline
 
 ### 1. Feature Detection — AGAST
@@ -47,7 +26,7 @@ A Brute-Force Matcher finds the best pair for each descriptor. Cross-checking en
 
 ### 4. Pose Estimation — Essential Matrix + RANSAC
 
-The Essential Matrix E encodes the rigid transformation (R, t) between the two cameras via the epipolar constraint:
+The Essential Matrix E encodes the rigid transformation (R, t) between the two cameras via epipolar constraint:
 
 ```
 x2ᵀ E x1 = 0
@@ -61,7 +40,7 @@ With the projection matrices P1 = K[I|0] and P2 = K[R|t] known, each matched poi
 
 ### 6. Outlier Filtering — Z-score
 
-Before bundle adjustment, points further than `outlier-thresh` standard deviations from the centroid are removed. This prevents geometric outliers from corrupting the non-linear optimization.
+Before bundle adjustment, points further than `outlier_thresh` standard deviations from the centroid are removed. This prevents geometric outliers from corrupting the non-linear optimization.
 
 ### 7. Bundle Adjustment — Levenberg-Marquardt
 

@@ -4,7 +4,7 @@
 
 ---
 
-## Repository Overview
+## Computer Vision Project Repo
 
 This repository contains the two projects developed for the Computer Vision course final evaluation. Both are command-line tools that implement concepts from the course, ranging from foundational image processing to full 3D scene reconstruction.
 
@@ -44,18 +44,7 @@ Implement a classic computer vision algorithm **from scratch**, using only stand
 
 ### What it does
 
-Given a grayscale image, the script detects corner keypoints by analyzing local intensity changes using the Harris response function. Detected corners are visualized as green dots overlaid on the original image.
-
-### Pipeline
-
-| Step | Description |
-|------|-------------|
-| Gaussian smoothing | Custom kernel + manual 2D convolution to reduce noise |
-| Sobel gradients | Custom Sobel kernels applied via `apply_convolution` to compute Ix and Iy |
-| Structure tensor | Box filtering of Ix², Iy², IxIy over a local window |
-| Harris response | `R = det(M) - k * trace(M)²`, with k = 0.04 |
-| Thresholding | Keeps pixels above `threshold × max(R)` |
-| NMS | Manual local-maxima extraction to isolate exact corner coordinates |
+I chose this task: given a grayscale image, the script detects corner keypoints by analyzing local intensity changes using the Harris response function. Detected corners are visualized as green dots overlaid on the original image.
 
 ### Usage
 
@@ -97,18 +86,6 @@ Solve a real computer vision problem using standard libraries (OpenCV, SciPy). S
 ### What it does
 
 The script takes two images of the same scene from slightly different viewpoints and reconstructs the 3D geometry by detecting and matching features, estimating camera pose, triangulating points in 3D, and refining them with bundle adjustment.
-
-### Pipeline
-
-| Step | Tool | Description |
-|------|------|-------------|
-| Feature detection | AGAST | Detects corner keypoints in each image |
-| Feature description | FREAK | Encodes keypoints as binary strings |
-| Matching | BFMatcher + Hamming | Finds best cross-checked pairs between the two views |
-| Pose estimation | Essential Matrix + RANSAC | Robustly estimates relative camera rotation R and translation t |
-| Triangulation | SVD | Lifts 2D correspondences to 3D points using projection matrices |
-| Outlier filtering | Z-score | Removes points beyond a configurable number of std deviations |
-| Bundle adjustment | Levenberg-Marquardt | Non-linear refinement minimizing reprojection error |
 
 ### Usage
 
@@ -163,4 +140,4 @@ scipy                 1.17.1
 | **Course** | Computer Vision |
 | **Professor** | Luca Lombardi |
 | **Academic Year** | 2025/2026 |
-| **Student** | Andrea |
+| **Student** | Andrea Emir Sevincel 535462 |
